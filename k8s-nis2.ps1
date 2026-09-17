@@ -28,7 +28,10 @@ $ErrorActionPreference = "Continue"
 $VersionUrl = "https://raw.githubusercontent.com/Besion22/k8s-nis2-installer/main/VERSION"
 
 function Info($msg) { Write-Host "`n==> $msg" -ForegroundColor Cyan }
-function Fail($msg) { Write-Host "FAIL: $msg" -ForegroundColor Red; exit 1 }
+# throw, not exit -- this script is normally run via `irm | iex` in the
+# caller's own interactive session, and `exit` there kills that whole shell
+# instead of just this script.
+function Fail($msg) { Write-Host "FAIL: $msg" -ForegroundColor Red; throw $msg }
 
 foreach ($cmd in "helm", "kubectl") {
     if (-not (Get-Command $cmd -ErrorAction SilentlyContinue)) { Fail "$cmd not found on PATH -- install it first" }
@@ -70,4 +73,3 @@ if (-not (Test-Path $FrontDoor)) { Fail "expected $FrontDoor after pull -- chart
 
 Set-Location $ScriptsDir
 & $FrontDoor @Rest
-exit $LASTEXITCODE
